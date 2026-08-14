@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>oie kk</title>
+<link rel="icon" type="image/png" href="https://cdn.discordapp.com/attachments/933146304647929917/1537850077375103046/undetale_heart.png?ex=6a8089fe&is=6a7f387e&hm=a45e310846fc6cff6d5612865d6fd29be2306a598b428a91943004d6ce432751">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* =====================================================
+     🎨 PERSONALIZE AQUI — cores, fontes e ritmo das transições.
+     Troque os valores abaixo e o site inteiro se atualiza.
+     ===================================================== */
+  :root{
+    --bg-deep:#3B0F1B;
+    --bg-mid:#7A2036;
+    --bg-glow:#C4485A;
+    --accent-blush:#F4A6B4;
+    --accent-gold:#E7B18A;
+    --text-cream:#FBEAE2;
+    --text-muted:rgba(251,234,226,.62);
+    --card-bg:rgba(255,255,255,.06);
+    --card-bg-hover:rgba(255,255,255,.1);
+    --card-border:rgba(255,255,255,.16);
+
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Sora', system-ui, -apple-system, sans-serif;
+    --font-mono:'JetBrains Mono', ui-monospace, monospace;
+
+    --dur-screen:.6s;
+    --ease-screen:cubic-bezier(.16,1,.3,1);
+    --dur-dodge:.35s;
+    --ease-dodge:cubic-bezier(.34,1.56,.64,1);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;min-height:100%;}
+  body{
+    font-family:var(--font-body);
+    color:var(--text-cream);
+    background:
+      radial-gradient(circle at 28% 18%, var(--bg-glow), transparent 55%),
+      linear-gradient(165deg, var(--bg-deep), var(--bg-mid) 75%);
+    background-attachment:fixed;
+    min-height:100vh;
+    position:relative;
+    overflow-x:hidden;
+  }
+  /* algo mais picture me sabe - grain */
+  body::after{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity: 0.55;;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* vinheta escurecendo as bordas */
+  body::before{
+    content:"";
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(circle at 50% 45%, transparent 45%, rgba(0,0,0,.4) 100%);
+  }
+
+  .ambient-hearts{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;}
+  .heart{
+    position:absolute; bottom:-10vh;
+    color:var(--accent-blush); opacity:0;
+    font-size:calc(1.1rem * var(--scale,1));
+    animation-name:float-up; animation-timing-function:ease-in; animation-iteration-count:infinite;
+  }
+  @keyframes float-up{
+    0%{transform:translateY(0) rotate(0deg); opacity:0;}
+    12%{opacity:.4;}
+    88%{opacity:.22;}
+    100%{transform:translateY(-115vh) rotate(18deg); opacity:0;}
+  }
+
+  #app{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+}
+
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:6vh 6vw;
+  opacity:0;
+  transform:translateY(14px) scale(.98);
+  pointer-events:none;
+  transition:
+    opacity var(--dur-screen) var(--ease-screen),
+    transform var(--dur-screen) var(--ease-screen);
+}
+
+.screen.active{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+  position:relative;
+}
+
+/* Ajuste vertical apenas da primeira tela */
+#screen-ask.active{
+  transform:translateY(170px);
+}
+  .eyebrow{
+    font-family:var(--font-mono);
+    text-transform:uppercase; letter-spacing:.18em;
+    font-size:.7rem; color:var(--accent-gold);
+    margin-bottom:1rem;
+  }
+
+  /* -------- tela 1: o convite -------- */
+  /* 📸 espaço reservado pra sua imagem — troque o conteúdo por <img src="sua-foto.jpg" alt="..."> se quiser */
+  .digital-symbol{
+  margin-bottom:1.5rem;
+  font-family:var(--font-display);
+  font-size:3rem;
+  color:var(--accent-blush);
+  line-height:1;
+  text-align:center;
+}
+
+  .greeting{font-family:var(--font-body); color:var(--text-muted); margin:0 0 .4rem; font-size:.95rem;}
+  .headline{
+    font-family:var(--font-display); font-style:italic; font-weight:500;
+    font-size:clamp(2.2rem, 7vw, 4rem);
+    margin:0 0 .6rem; text-align:center; line-height:1.05;
+  }
+  .subtext{color:var(--text-muted); text-align:center; margin:0 0 2.4rem; font-size:1rem;}
+
+  .choices{display:flex; gap:1.2rem; align-items:center; position:relative;}
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:1rem;
+    padding:.9rem 2.2rem; border-radius:999px; border:none; cursor:pointer;
+    transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .btn:focus-visible{outline:2px solid var(--accent-gold); outline-offset:3px;}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--accent-blush), var(--bg-glow));
+    color:var(--bg-deep);
+    box-shadow:0 8px 24px rgba(196,72,90,.35);
+  }
+  .btn-primary:hover{transform:translateY(-2px) scale(1.03);}
+  .btn-ghost{
+    background:transparent; color:var(--text-cream);
+    border:1.5px solid var(--card-border);
+    transition:left var(--dur-dodge) var(--ease-dodge), top var(--dur-dodge) var(--ease-dodge),
+               transform .15s ease, background .2s ease;
+  }
+  .btn-ghost:hover{background:var(--card-bg-hover);}
+
+  /* -------- tela 2: os detalhes -------- */
+  .details-form{width:100%; max-width:560px; display:flex; flex-direction:column; gap:1.8rem;}
+  fieldset{border:none; margin:0; padding:0;}
+  legend, .field-label{
+    font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.1em;
+    font-size:.72rem; color:var(--accent-gold); margin-bottom:.7rem; padding:0;
+  }
+
+  .options-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:.7rem;}
+  .option-card{
+    position:relative; display:block; padding:.9rem 1rem; border-radius:14px;
+    background:var(--card-bg); border:1px solid var(--card-border); cursor:pointer;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .option-card input{position:absolute; opacity:0; width:0; height:0;}
+  .option-card:hover{background:var(--card-bg-hover);}
+  .option-card input:checked ~ .option-name{color:var(--accent-blush);}
+  .option-card:has(input:checked){border-color:var(--accent-blush); background:var(--card-bg-hover);}
+  .option-name{display:block; font-weight:600; margin-bottom:.15rem;}
+  .option-desc{display:block; font-size:.82rem; color:var(--text-muted);}
+
+  .input-row{display:flex; gap:.8rem; flex-wrap:wrap;}
+  .input-row > div{flex:1; min-width:150px;}
+  input[type="date"], input[type="time"]{
+    width:100%; padding:.75rem .9rem; border-radius:12px;
+    background:var(--card-bg); border:1px solid var(--card-border);
+    color:var(--text-cream); font-family:var(--font-mono); font-size:.95rem;
+    color-scheme:dark;
+  }
+  input[type="date"]:focus, input[type="time"]:focus{outline:2px solid var(--accent-gold); outline-offset:2px;}
+  .hint{font-size:.78rem; color:var(--text-muted); margin-top:.4rem;}
+
+  .chips-row{display:flex; flex-wrap:wrap; gap:.6rem;}
+  .chip{position:relative; cursor:pointer;}
+  .chip input{position:absolute; opacity:0; width:0; height:0;}
+  .chip span{
+    display:inline-block; padding:.55rem 1.1rem; border-radius:999px;
+    background:var(--card-bg); border:1px solid var(--card-border); font-size:.88rem;
+    transition:background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .chip input:checked + span{background:var(--accent-blush); color:var(--bg-deep); border-color:var(--accent-blush);}
+  .chip:focus-within span{outline:2px solid var(--accent-gold); outline-offset:2px;}
+
+  .btn-confirm{width:100%; padding:1rem; font-size:1.02rem;}
+  .btn-confirm:disabled{opacity:.4; cursor:not-allowed; transform:none;}
+
+  .back-link{
+    background:none; border:none; color:var(--text-muted); font-family:var(--font-body);
+    font-size:.85rem; cursor:pointer; margin-top:1.4rem; text-decoration:underline;
+  }
+
+  /* -------- tela 3: confirmado -------- */
+  .confirmed-icon{font-size:2.6rem; margin-bottom:1rem; animation:pulse 2.2s ease-in-out infinite;}
+  .recap-list{
+    width:100%; max-width:420px; display:flex; flex-direction:column; gap:.9rem;
+    background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px;
+    padding:1.4rem 1.6rem; margin-top:1.6rem;
+  }
+  .recap-item{display:flex; justify-content:space-between; gap:1rem; font-size:.92rem;}
+  .recap-label{font-family:var(--font-mono); color:var(--text-muted); text-transform:uppercase; font-size:.72rem; letter-spacing:.08em; padding-top:.15rem;}
+  .recap-value{text-align:right; font-weight:600;}
+  .webhook-warning{
+    margin-top:1.4rem; font-size:.8rem; color:var(--accent-gold);
+    max-width:420px; text-align:center; line-height:1.5;
+  }
+  .webhook-warning[hidden]{display:none;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+
+  @media (max-width:480px){
+    .headline{font-size:clamp(1.9rem,9vw,2.6rem);}
+    .choices{gap:.8rem;}
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient-hearts" aria-hidden="true"></div>
+
+<main id="app">
+
+  <!-- ============ screen i abt invite ============ -->
+  <section id="screen-ask" class="screen active">
+    <div class="eyebrow">bixa, nem te conto</div>
+    <div class="digital-symbol" aria-hidden="true">
+  𓆝 𓆟 𓆞 𓆝 𓆟
+</div>
+    <h1 class="headline">quer sair comigo?</h1>
+    <p class="subtext">vai ser legal, juro!</p>
+    <div class="choices">
+      <button type="button" class="btn btn-primary" id="btn-yes">sim</button>
+      <button type="button" class="btn btn-ghost" id="btn-no">não</button>
+    </div>
+  </section>
+
+  <!-- ============ screen ii abt details cof cof ============ -->
+  <section id="screen-details" class="screen">
+    <div class="eyebrow">oba, que bom que aceitou!</div>
+    <h2 class="headline" style="font-size:clamp(1.6rem,5vw,2.4rem)">vamos combinar, então!</h2>
+
+    <form class="details-form" id="details-form">
+      <fieldset>
+        <legend>Onde?</legend>
+        <div class="options-grid" id="location-options"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Quando?</legend>
+        <div class="input-row">
+          <div>
+            <input type="date" id="input-date" min="2026-08-29" max="2026-09-05" required>
+          </div>
+          <div>
+            <input type="time" id="input-time" required>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Como pretende se vestir?</legend>
+        <div class="chips-row" id="outfit-options"></div>
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary btn-confirm" id="btn-confirm" disabled>confirmar</button>
+      <button type="button" class="back-link" id="btn-back">voltar</button>
+    </form>
+  </section>
+
+  <!-- ============ screen iii abt confirmed ============ -->
+  <section id="screen-confirmed" class="screen">
+    <div class="eyebrow">feito!</div>
+    <div class="confirmed-icon" aria-hidden="true">────୨ৎ────</div>
+    <h2 class="headline" style="font-size:clamp(1.8rem,6vw,2.8rem)">Combinado, te vejo lá!</h2>
+    <div class="recap-list" id="recap-list"></div>
+            <p class="hint">Não vale faltar, ok!</p>
+    <p class="webhook-warning" id="webhook-warning" hidden>
+      obs: backend ainda não configurado, isto é, as datas, horário, dresscode e local não foram fixados. site em testes.
+    </p>
+  </section>
+
+</main>
+
+<script>
+  /* =====================================================
+     csetup.exe porque o caba nao é de ferro
+     ===================================================== */
+  const CONFIG = {
+    recipientName: "Pedro", // saudação da gay
+    webhookUrl: "https://script.google.com/macros/s/AKfycbwKi-ytve-qzd65i72_zyL80DY538Z3mD-E0g26xp24doyJUdEzyFiZvPUSe5xn2C_e/exec", // webhook do google apps script
+
+    locations: [
+      { name: "Praia da Lua", desc: "piequenique e talvez umas gins superfaturadas" },
+      { name: "Cat Café", desc: "croissants, gatos e café" },
+      { name: "Cinema", desc: "sessão qualquer, pipoca opcional" },
+      { name: "Rolê no Centro", desc: "você disse que não gosta, mas não custa tentar!" }
+    ],
+
+    outfits: [
+      "Casual chic confy",
+      "Esportivo, o de sempre",
+      "Praiano e levemente solto",
+      "Produzido — ocasião especial"
+    ],
+
+    ambientHeartCount: 10
+  };
+
+  // -------- corações ambiente --------
+  const heartsWrap = document.querySelector('.ambient-hearts');
+  for(let i=0;i<CONFIG.ambientHeartCount;i++){
+    const span = document.createElement('span');
+    span.className = 'heart';
+    span.textContent = '♥';
+    span.style.left = (Math.random()*100) + '%';
+    span.style.animationDelay = (Math.random()*10) + 's';
+    span.style.animationDuration = (10 + Math.random()*9) + 's';
+    span.style.setProperty('--scale', (0.5 + Math.random()*0.9).toFixed(2));
+    heartsWrap.appendChild(span);
+  }
+
+  // -------- navegação entre telas --------
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  document.getElementById('btn-yes').addEventListener('click', () => showScreen('screen-details'));
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    // reseta a posição do botão "não" pra próxima vez que a tela 1 aparecer
+    const noBtn = document.getElementById('btn-no');
+    noBtn.style.position = '';
+    noBtn.style.left = '';
+    noBtn.style.top = '';
+    noBtn.textContent = 'não';
+    showScreen('screen-ask');
+  });
+
+  // -------- botao 'não' fujão --------
+  const noBtn = document.getElementById('btn-no');
+  const taunts = ["não", "mana!", "...", "maldade véi", "vai recusar a não-binária?", "vai mesmo?", "mereço!", "adoida", "oiiiiii", "isso não se faz", "vai mesmo recusar?", "mona", "cadê o bom senso?", "aceita porfa", "cigarro e um date não se nega", "mônica...", "EI", "quase", "alexa, convencê-lo"];
+  let noAttempts = 0;
+
+  function dodge(e){
+    e.preventDefault();
+    const rect = noBtn.getBoundingClientRect();
+    if(noBtn.style.position !== 'fixed'){
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = rect.left + 'px';
+      noBtn.style.top = rect.top + 'px';
+      noBtn.style.margin = '0';
+      void noBtn.offsetWidth; // força reflow antes de animar a próxima posição
+    }
+    const margin = 20;
+    const maxX = Math.max(margin, window.innerWidth - rect.width - margin);
+    const maxY = Math.max(margin, window.innerHeight - rect.height - margin);
+    noBtn.style.left = (margin + Math.random()*(maxX-margin)) + 'px';
+    noBtn.style.top = (margin + Math.random()*(maxY-margin)) + 'px';
+    noAttempts++;
+    noBtn.textContent = taunts[noAttempts % taunts.length];
+  }
+  noBtn.addEventListener('pointerenter', dodge);
+  noBtn.addEventListener('pointerdown', dodge);
+  noBtn.addEventListener('click', e => e.preventDefault());
+
+  // -------- popula locais e roupas a partir do CONFIG --------
+  const locWrap = document.getElementById('location-options');
+  CONFIG.locations.forEach((loc, i) => {
+    const id = 'loc-' + i;
+    locWrap.insertAdjacentHTML('beforeend', `
+      <label class="option-card" for="${id}">
+        <input type="radio" name="location" value="${loc.name}" id="${id}">
+        <span class="option-name">${loc.name}</span>
+        <span class="option-desc">${loc.desc}</span>
+      </label>`);
+  });
+
+  const outfitWrap = document.getElementById('outfit-options');
+  CONFIG.outfits.forEach((outfit, i) => {
+    const id = 'outfit-' + i;
+    outfitWrap.insertAdjacentHTML('beforeend', `
+      <label class="chip" for="${id}">
+        <input type="radio" name="outfit" value="${outfit}" id="${id}">
+        <span>${outfit}</span>
+      </label>`);
+  });
+
+  // -------- validação do formulário --------
+ // -------- validação do formulário --------
+const form = document.getElementById('details-form');
+const confirmBtn = document.getElementById('btn-confirm');
+const dateInput = document.getElementById('input-date');
+const timeInput = document.getElementById('input-time');
+
+// Cria o aviso de data inválida automaticamente
+const dateWarning = document.createElement('p');
+
+dateWarning.className = 'hint date-warning';
+dateWarning.textContent =
+  'só pode escolher uma data entre 29/08 e 05/09, ok?';
+
+dateWarning.hidden = true;
+
+// Coloca o aviso logo depois do campo de data
+dateInput.parentElement.appendChild(dateWarning);
+
+
+// Animação do aviso
+const warningStyle = document.createElement('style');
+
+warningStyle.textContent = `
+  .date-warning {
+    margin-top: .55rem;
+    color: var(--accent-blush);
+    font-weight: 600;
+  }
+
+  .date-warning.shake {
+    animation: date-warning-shake .45s ease;
+  }
+
+  @keyframes date-warning-shake {
+    0%, 100% {
+      transform: translateX(0);
+    }
+
+    20% {
+      transform: translateX(-7px);
+    }
+
+    40% {
+      transform: translateX(7px);
+    }
+
+    60% {
+      transform: translateX(-5px);
+    }
+
+    80% {
+      transform: translateX(5px);
+    }
+  }
+`;
+
+document.head.appendChild(warningStyle);
+
+
+// Mostra o aviso e faz ele balançar
+function showDateWarning() {
+  dateWarning.hidden = false;
+
+  // Reinicia a animação mesmo se a pessoa errar várias vezes
+  dateWarning.classList.remove('shake');
+
+  void dateWarning.offsetWidth;
+
+  dateWarning.classList.add('shake');
+}
+
+
+// Esconde o aviso quando a data volta a ser válida
+function hideDateWarning() {
+  dateWarning.hidden = true;
+  dateWarning.classList.remove('shake');
+}
+
+
+// Verifica se a data está dentro do período permitido
+function validateDate() {
+  const value = dateInput.value;
+
+  // Ainda não escolheu uma data
+  if (!value) {
+    hideDateWarning();
+    return false;
+  }
+
+  // Data anterior ou posterior ao período permitido
+  if (value < dateInput.min || value > dateInput.max) {
+    showDateWarning();
+    return false;
+  }
+
+  // Data válida
+  hideDateWarning();
+  return true;
+}
+
+
+// Verifica todos os campos necessários
+function checkValid() {
+  const hasLocation =
+    form.querySelector('input[name="location"]:checked');
+
+  const hasOutfit =
+    form.querySelector('input[name="outfit"]:checked');
+
+  const validDate = validateDate();
+
+  const hasTime = timeInput.value !== '';
+
+  confirmBtn.disabled = !(
+    hasLocation &&
+    hasOutfit &&
+    validDate &&
+    hasTime
+  );
+}
+
+
+// Atualiza a validação conforme a pessoa preenche
+form.addEventListener('input', checkValid);
+
+dateInput.addEventListener('change', checkValid);
+
+timeInput.addEventListener('change', checkValid);
+
+// -------- envio --------
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      name: CONFIG.recipientName || '',
+      location: form.querySelector('input[name="location"]:checked').value,
+      date: dateInput.value,
+      time: timeInput.value,
+      outfit: form.querySelector('input[name="outfit"]:checked').value
+    };
+
+    renderRecap(data);
+    showScreen('screen-confirmed');
+
+    const configured = CONFIG.webhookUrl && !CONFIG.webhookUrl.includes('COLE_AQUI');
+    document.getElementById('webhook-warning').hidden = configured;
+
+    if(configured){
+      try {
+        // Empacota os dados bonitinhos para o Google
+        const urlParams = new URLSearchParams(data).toString();
+        
+        // Envia na surdina com o no-cors ativado
+        await fetch(CONFIG.webhookUrl, {
+          method: 'POST',
+          mode: 'no-cors', // <-- ISSO AQUI EVITA O BLOQUEIO DO NAVEGADOR
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: urlParams
+        });
+        
+      } catch(err){
+        console.error('Falha ao enviar pro webhook:', err);
+      }
+    }
+  });
+
+  function renderRecap(data){
+    const dateObj = new Date(data.date + 'T' + data.time + ':00');
+    const dateFormatted = dateObj.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+    const timeFormatted = dateObj.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+
+    const rows = [
+      ['local', data.location],
+      ['data', dateFormatted],
+      ['hora', timeFormatted],
+      ['roupa', data.outfit]
+    ];
+
+    document.getElementById('recap-list').innerHTML = rows.map(([label, value]) => `
+      <div class="recap-item">
+        <span class="recap-label">${label}</span>
+        <span class="recap-value">${value}</span>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

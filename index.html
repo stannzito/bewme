@@ -224,14 +224,83 @@
   }
   .webhook-warning[hidden]{display:none;}
 
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none !important; transition:none !important;}
-  }
+.toast-message{
+  position:fixed;
+  left:50%;
+  bottom:2rem;
+  transform:translate(-50%, 20px);
+  background:rgba(59,15,27,.95);
+  color:var(--text-cream);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  padding:.85rem 1.2rem;
+  font-size:.82rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .3s ease, transform .3s ease;
+  z-index:100;
+  text-align:center;
+}
+
+.toast-message button{
+  pointer-events:auto;
+  margin-left:.8rem;
+  background:none;
+  border:none;
+  color:var(--accent-blush);
+  font-family:var(--font-body);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.toast-message.show{
+  opacity:1;
+  transform:translate(-50%, 0);
+  pointer-events:auto;
+}
+
+.toast-message button{
+  margin-left:.8rem;
+  padding:.35rem .65rem;
+  border:1px solid var(--card-border);
+  border-radius:7px;
+  background:transparent;
+  color:var(--accent-blush);
+  font-family:var(--font-body);
+  font-size:.78rem;
+  cursor:pointer;
+}
+
+.toast-message button:hover{
+  background:var(--card-bg-hover);
+}
 
   @media (max-width:480px){
-    .headline{font-size:clamp(1.9rem,9vw,2.6rem);}
-    .choices{gap:.8rem;}
-  }
+  .headline{font-size:clamp(1.9rem,9vw,2.6rem);}
+  .choices{gap:.8rem;}
+}
+
+.confirmation-check{
+  display:flex;
+  align-items:flex-start;
+  gap:.7rem;
+  cursor:pointer;
+  font-size:.8rem;
+  line-height:1.45;
+  color:var(--text-muted);
+}
+
+.confirmation-check input{
+  margin-top:.2rem;
+  accent-color:var(--accent-blush);
+  cursor:pointer;
+  flex-shrink:0;
+}
+
+.confirmation-check input:checked + span{
+  color:var(--text-cream);
+}
 </style>
 </head>
 <body>
@@ -282,8 +351,16 @@
         <div class="chips-row" id="outfit-options"></div>
       </fieldset>
 
-      <button type="submit" class="btn btn-primary btn-confirm" id="btn-confirm" disabled>confirmar</button>
-      <button type="button" class="back-link" id="btn-back">voltar</button>
+      <label class="confirmation-check">
+  <input type="checkbox" id="confirm-check" disabled>
+  <span>Eu confirmo esta resposta e não desejo alterá-la posteriormente.</span>
+</label>
+
+<button type="submit" class="btn btn-primary btn-confirm" id="btn-confirm" disabled>
+  confirmar
+</button>
+
+<button type="button" class="back-link" id="btn-back">voltar</button>
     </form>
   </section>
 
@@ -297,6 +374,10 @@
     <p class="webhook-warning" id="webhook-warning" hidden>
       obs: backend ainda não configurado, isto é, as datas, horário, dresscode e local não foram fixados. site em testes.
     </p>
+    <div class="toast-message" id="toast-message">
+  <span id="toast-text"></span>
+  <button type="button" id="toast-undo">desfazer</button>
+</div>
   </section>
 
 </main>
@@ -407,11 +488,69 @@
   });
 
   // -------- validação do formulário --------
- // -------- validação do formulário --------
 const form = document.getElementById('details-form');
 const confirmBtn = document.getElementById('btn-confirm');
 const dateInput = document.getElementById('input-date');
 const timeInput = document.getElementById('input-time');
+const confirmCheck = document.getElementById('confirm-check');
+
+let countdownActive = false;
+let countdownTimer = null;
+
+function saveConfirmation(data) {
+  localStorage.setItem('dateConfirmation', JSON.stringify(data));
+}
+
+function loadConfirmation() {
+  const saved = localStorage.getItem('dateConfirmation');
+
+  if (!saved) return;
+
+  try {
+    const data = JSON.parse(saved);
+
+    renderRecap(data);
+    saveConfirmation(data);
+    showScreen('screen-confirmed');
+
+  } catch (err) {
+    console.error('Não foi possível carregar a confirmação salva:', err);
+    localStorage.removeItem('dateConfirmation');
+  }
+}
+
+function updateConfirmationCheck() {
+  const hasLocation =
+    form.querySelector('input[name="location"]:checked');
+
+  const hasOutfit =
+    form.querySelector('input[name="outfit"]:checked');
+
+  const validDate = validateDate();
+
+  const hasTime = timeInput.value !== '';
+
+  const allFieldsValid =
+    hasLocation &&
+    hasOutfit &&
+    validDate &&
+    hasTime;
+
+  if (!allFieldsValid) {
+    confirmCheck.checked = false;
+    confirmCheck.disabled = true;
+
+    clearInterval(countdownTimer);
+    countdownActive = false;
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'confirmar';
+
+    return;
+  }
+
+  confirmCheck.disabled = false;
+}
 
 // Cria o aviso de data inválida automaticamente
 const dateWarning = document.createElement('p');
@@ -520,59 +659,169 @@ function checkValid() {
 
   const hasTime = timeInput.value !== '';
 
+  const confirmed =
+    confirmCheck.checked;
+
   confirmBtn.disabled = !(
     hasLocation &&
     hasOutfit &&
     validDate &&
-    hasTime
+    hasTime &&
+    confirmed &&
+    !countdownActive
   );
 }
 
 
-// Atualiza a validação conforme a pessoa preenche
-form.addEventListener('input', checkValid);
+// -------- Atualiza a validação conforme a pessoa preenche
+function handleFormChange(e) {
+  // Se foi a própria caixinha de confirmação,
+  // deixa o listener dela cuidar disso.
+  if (e.target === confirmCheck) return;
 
-dateInput.addEventListener('change', checkValid);
+  if (confirmCheck.checked) {
+    confirmCheck.checked = false;
+    clearInterval(countdownTimer);
+    countdownActive = false;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'confirmar';
+  }
 
-timeInput.addEventListener('change', checkValid);
+  updateConfirmationCheck();
+  checkValid();
+}
+
+form.addEventListener('input', handleFormChange);
+form.addEventListener('change', handleFormChange);
+
+confirmCheck.addEventListener('change', () => {
+  if (!confirmCheck.checked) {
+    clearInterval(countdownTimer);
+    countdownActive = false;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'confirmar';
+    return;
+  }
+
+  countdownActive = true;
+  confirmBtn.disabled = true;
+
+  let seconds = 3;
+  confirmBtn.textContent = `confirmar (${seconds})`;
+
+  countdownTimer = setInterval(() => {
+    seconds--;
+
+    if (seconds > 0) {
+      confirmBtn.textContent = `confirmar (${seconds})`;
+    } else {
+      clearInterval(countdownTimer);
+      countdownActive = false;
+      confirmBtn.textContent = 'confirmar';
+      checkValid();
+    }
+  }, 1000);
+});
+
+const toast = document.getElementById('toast-message');
+
+function showToast(message) {
+  const toast = document.getElementById('toast-message');
+  const toastText = document.getElementById('toast-text');
+
+  toastText.textContent = message;
+  toast.classList.add('show');
+}
+
+function hideToast() {
+  const toast = document.getElementById('toast-message');
+  toast.classList.remove('show');
+}
+
+document.getElementById('toast-undo').addEventListener('click', () => {
+
+  // apaga a confirmação salva
+  localStorage.removeItem('dateConfirmation');
+
+  // cancela qualquer contador que ainda esteja ativo
+  clearInterval(countdownTimer);
+  countdownTimer = null;
+  countdownActive = false;
+
+  // limpa todas as escolhas do formulário
+  form.reset();
+
+  // reseta a caixinha de confirmação
+  confirmCheck.checked = false;
+  confirmCheck.disabled = true;
+
+  // reseta o botão de confirmar
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'confirmar';
+
+  // esconde o toast
+  hideToast();
+
+  // volta para a tela de escolhas
+  showScreen('screen-details');
+});
 
 // -------- envio --------
   form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = {
-      name: CONFIG.recipientName || '',
-      location: form.querySelector('input[name="location"]:checked').value,
-      date: dateInput.value,
-      time: timeInput.value,
-      outfit: form.querySelector('input[name="outfit"]:checked').value
-    };
+  e.preventDefault();
 
-    renderRecap(data);
-    showScreen('screen-confirmed');
+  const data = {
+    name: CONFIG.recipientName || '',
+    location: form.querySelector('input[name="location"]:checked').value,
+    date: dateInput.value,
+    time: timeInput.value,
+    outfit: form.querySelector('input[name="outfit"]:checked').value
+  };
 
-    const configured = CONFIG.webhookUrl && !CONFIG.webhookUrl.includes('COLE_AQUI');
-    document.getElementById('webhook-warning').hidden = configured;
+  confirmBtn.disabled = true;
 
-    if(configured){
-      try {
-        // Empacota os dados bonitinhos para o Google
-        const urlParams = new URLSearchParams(data).toString();
-        
-        // Envia na surdina com o no-cors ativado
-        await fetch(CONFIG.webhookUrl, {
+  showToast('enviando confirmação...');
+
+  const configured =
+    CONFIG.webhookUrl &&
+    !CONFIG.webhookUrl.includes('COLE_AQUI');
+
+  document.getElementById('webhook-warning').hidden = configured;
+
+  if (configured) {
+    try {
+      const urlParams = new URLSearchParams(data).toString();
+
+      await Promise.race([
+        fetch(CONFIG.webhookUrl, {
           method: 'POST',
-          mode: 'no-cors', // <-- ISSO AQUI EVITA O BLOQUEIO DO NAVEGADOR
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
           },
           body: urlParams
-        });
-        
-      } catch(err){
-        console.error('Falha ao enviar pro webhook:', err);
-      }
+        }),
+
+        new Promise(resolve => setTimeout(resolve, 5000))
+      ]);
+
+    } catch (err) {
+      console.error('Falha ao enviar ao webhook:', err);
     }
-  });
+  }
+
+  showToast('confirmação enviada!');
+
+saveConfirmation(data);
+
+renderRecap(data);
+
+showScreen('screen-confirmed');
+
+  setTimeout(() => {
+    hideToast();
+  }, 2500);
+});
 
   function renderRecap(data){
     const dateObj = new Date(data.date + 'T' + data.time + ':00');
@@ -592,6 +841,57 @@ timeInput.addEventListener('change', checkValid);
         <span class="recap-value">${value}</span>
       </div>`).join('');
   }
+
+  loadConfirmation();
+
+// -------- chave secreta de teste --------
+
+let resetKey = '';
+
+document.addEventListener('keydown', (e) => {
+  resetKey += e.key.toLowerCase();
+
+  // mantém apenas os últimos 12 caracteres
+  if (resetKey.length > 12) {
+    resetKey = resetKey.slice(-12);
+  }
+
+  if (resetKey === 'pedrosampaio') {
+    resetSite();
+    resetKey = '';
+  }
+});
+
+function resetSite() {
+
+  // apaga a confirmação salva
+  localStorage.removeItem('dateConfirmation');
+
+  // cancela qualquer contador
+  clearInterval(countdownTimer);
+  countdownTimer = null;
+  countdownActive = false;
+
+  // limpa o formulário
+  form.reset();
+
+  // reseta a caixinha
+  confirmCheck.checked = false;
+  confirmCheck.disabled = true;
+
+  // reseta o botão
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'confirmar';
+
+  // fecha o toast
+  hideToast();
+
+  // volta para a tela inicial
+  showScreen('screen-ask');
+
+  console.log('Site resetado para os testes.');
+}
+
 </script>
 </body>
 </html>

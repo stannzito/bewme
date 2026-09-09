@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            background-color: #fff2de; 
+            color: #1a1a1a; 
+            font-family: 'Times New Roman', Times, serif; 
+            margin: 0; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .post-unico {
+            width: 460px;
+            max-width: 90vw;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post-header { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            font-size: 14px; 
+        }
+        .pfp { 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 1px solid #1a1a1a; 
+            margin-right: 10px; 
+        }
+        .username { font-weight: bold; letter-spacing: 0.5px; text-transform: lowercase; }
+        .separator { margin: 0 6px; }
+        .post-time { font-style: italic; color: #555; font-size: 13px; }
+
+        .moldura-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .moldura { 
+            position: relative; 
+            width: 100%;
+            background-color: #f7edd9; /* Fundo de segurança caso demore um milissegundo */
+            border: 1px solid #d4c8b6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        }
+        .foto-brilho {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            filter: blur(45px) saturate(140%); opacity: 0.6; z-index: -1;
+            mix-blend-mode: multiply; 
+            transition: opacity 0.6s ease-in-out;
+            pointer-events: none;
+        }
+        .foto-principal { 
+            width: 100%; 
+            height: auto; 
+            display: block;
+            transition: opacity 0.6s ease-in-out; 
+        }
+
+        .fade-out {
+            opacity: 0;
+        }
+
+        .nav-arrow {
+            position: absolute; 
+            top: 50%; 
+            transform: translateY(-50%);
+            background: rgba(255, 242, 222, 0.85); 
+            border: 1px solid #1a1a1a; 
+            color: #1a1a1a;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            font-size: 18px; 
+            font-family: 'Times New Roman', serif;
+            cursor: pointer; 
+            z-index: 10; 
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+        .nav-arrow:hover { opacity: 1; background: #fff2de; transform: translateY(-50%) scale(1.1); }
+        .nav-arrow.left { left: -20px; }
+        .nav-arrow.right { right: -20px; }
+
+        .interacoes { margin-top: 15px; font-size: 14px; }
+        .botao { 
+            background: transparent; border: 1px solid #1a1a1a; color: #1a1a1a; 
+            padding: 5px 12px; font-family: inherit; cursor: pointer; 
+            text-transform: lowercase; font-size: 13px; letter-spacing: 0.5px;
+            transition: all 0.4s ease; border-radius: 2px;
+        }
+        .botao:hover { background: #1a1a1a; color: #fff2de; }
+        .botao.liked { background: #1a1a1a; color: #fff2de; font-style: italic; }
+        
+        .legenda-post { margin: 12px 0; font-style: italic; color: #222; }
+        
+        .comentarios-box {
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 5px;
+        }
+        .comentarios-box::-webkit-scrollbar { width: 3px; }
+        .comentarios-box::-webkit-scrollbar-thumb { background: #c2b7a3; }
+
+        .comentario { margin: 6px 0; line-height: 1.4; color: #333; font-size: 13px; }
+        .autor { font-weight: bold; text-transform: lowercase; font-size: 13px; margin-right: 5px; color: #1a1a1a; }
+        
+        form { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #e0d5c1; padding-top: 15px; }
+        input[type="text"] { 
+            flex-grow: 1; background: transparent; border: none; 
+            border-bottom: 1px solid #c2b7a3; color: #1a1a1a; 
+            font-family: inherit; font-style: italic; padding-bottom: 3px;
+            font-size: 13px;
+        }
+        input:focus { outline: none; border-bottom-color: #1a1a1a; }
+
+        .sienna-signature {
+            position: fixed; bottom: 30px; right: 40px;
+            width: 300px;
+            height: auto;
+            z-index: 1000; opacity: 0;
+            transition: opacity 2s ease;
+            pointer-events: none;
+        }
+
+        .contador-fotos {
+            text-align: center;
+            font-size: 12px;
+            font-style: italic;
+            color: #666;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div style="position: fixed; top: 25px; left: 30px; z-index: 1000;">
+        <button id="btn-audio" onclick="toggleAudio()" style="background: transparent; border: none; color: #1a1a1a; font-family: 'Times New Roman', serif; font-style: italic; font-size: 12px; cursor: pointer; opacity: 0.6;">
+            ♪ som: ligado
+        </button>
+    </div>
+
+    <audio id="audio-fundo" loop preload="auto">
+        <source src="{{ url_for('static', filename='musa.mp3') }}" type="audio/mpeg">
+    </audio>
+
+    <div class="post-unico">
+        <div class="post-header">
+            <img src="{{ url_for('static', filename='pfp.jpg') }}" class="pfp" alt="stannzito" onerror="this.style.display='none'">
+            <span class="username">@stannzito</span>
+            <span class="separator">・</span>
+            <span class="post-time time-ago">calculando...</span>
+        </div>
+
+        <div class="moldura-container">
+            <button class="nav-arrow left" onclick="mudarFoto(-1)">←</button>
+            <button class="nav-arrow right" onclick="mudarFoto(1)">→</button>
+
+            <div class="moldura">
+                <img id="img-brilho" class="foto-brilho" src="">
+                <img id="img-principal" class="foto-principal" src="">
+            </div>
+        </div>
+
+        <div class="contador-fotos">
+            <span id="indice-atual">1</span> / <span id="total-fotos">1</span>
+        </div>
+        
+        <div class="interacoes">
+            <button class="botao" id="btn-curtir" onclick="toggleLike(this)">curtir</button>
+            
+            <div class="legenda-post">
+                <span class="autor">@stannzito</span> <span id="texto-legenda"></span>
+            </div>
+
+            <div class="comentarios-box" id="lista-comentarios">
+                <!-- Comentários injetados via JS -->
+            </div>
+
+            <form id="form-comentario" onsubmit="enviarComentario(event)">
+                 <input type="hidden" name="foto" id="input-foto-atual" value="">
+                 <input type="text" name="texto" id="input-texto-comentario" placeholder="adicionar comentário..." autocomplete="off" required>
+                 <button type="submit" class="botao">comentar</button>
+            </form>
+        </div>
+    </div>
+
+    <img src="{{ url_for('static', filename='sienna_signature.png') }}" class="sienna-signature" id="assinatura" alt="Sienna 2026 handwritten signature logo in elegant script lettering on a transparent background with a soft minimal brand aesthetic" onerror="this.style.display='none'">
+
+    <script>
+        const fotosData = {{ dados_fotos | tojson }};
+        const comentariosData = {{ comentarios | tojson }};
+        
+        let indiceAtual = 0;
+
+        const imgPrincipal = document.getElementById('img-principal');
+        const imgBrilho = document.getElementById('img-brilho');
+        const textoLegenda = document.getElementById('texto-legenda');
+        const listaComentarios = document.getElementById('lista-comentarios');
+        const inputFotoAtual = document.getElementById('input-foto-atual');
+        const spanIndice = document.getElementById('indice-atual');
+        const spanTotal = document.getElementById('total-fotos');
+
+        spanTotal.innerText = fotosData.length;
+
+        function carregarFoto(index) {
+            if (index < 0) indiceAtual = fotosData.length - 1;
+            else if (index >= fotosData.length) indiceAtual = 0;
+            else indiceAtual = index;
+
+            imgPrincipal.classList.add('fade-out');
+            imgBrilho.classList.add('fade-out');
+
+            setTimeout(() => {
+                const fotoAtual = fotosData[indiceAtual];
+                const caminhoArquivo = "/static/" + fotoAtual.arquivo;
+
+                imgPrincipal.src = caminhoArquivo;
+                imgBrilho.src = caminhoArquivo;
+                textoLegenda.innerText = fotoAtual.legenda;
+                inputFotoAtual.value = fotoAtual.arquivo;
+                spanIndice.innerText = indiceAtual + 1;
+
+                listaComentarios.innerHTML = "";
+                const comentariosDestaFoto = comentariosData[fotoAtual.arquivo] || [];
+                
+                if (comentariosDestaFoto.length === 0) {
+                    listaComentarios.innerHTML = '<div style="color: #777; font-style: italic; font-size: 12px;">nenhum comentário ainda...</div>';
+                } else {
+                    comentariosDestaFoto.forEach(com => {
+                        const div = document.createElement('div');
+                        div.className = 'comentario';
+                        div.innerHTML = `<span class="autor">${com[0]}</span> ${com[1]}`;
+                        listaComentarios.appendChild(div);
+                    });
+                }
+
+                imgPrincipal.classList.remove('fade-out');
+                imgBrilho.classList.remove('fade-out');
+            }, 200);
+        }
+
+        function mudarFoto(direcao) {
+            carregarFoto(indiceAtual + direcao);
+        }
+
+        function calcularTempoPassado() {
+            const agora = new Date();
+            const postTime = new Date();
+            postTime.setHours(21, 30, 0, 0);
+
+            if (agora < postTime) {
+                postTime.setDate(postTime.getDate() - 1);
+            }
+
+            const diffMs = agora - postTime;
+            const diffHrs = Math.floor(diffMs / 3600000);
+            const diffMins = Math.round((diffMs % 3600000) / 60000);
+
+            let textoTempo = "";
+            if (diffHrs > 0) { textoTempo += diffHrs + "h "; }
+            textoTempo += diffMins + "m";
+            return textoTempo;
+        }
+
+        function enviarComentario(event) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById('form-comentario'));
+            const inputTexto = document.getElementById('input-texto-comentario');
+
+            fetch('/comentar', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'sucesso') {
+                    inputTexto.value = "";
+
+                    const avisoVazio = listaComentarios.querySelector('div[style*="font-style: italic"]');
+                    if (avisoVazio) {
+                        avisoVazio.remove();
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = 'comentario';
+                    div.innerHTML = `<span class="autor">${data.autor}</span> ${data.texto}`;
+                    listaComentarios.appendChild(div);
+
+                    listaComentarios.scrollTop = listaComentarios.scrollHeight;
+                }
+            })
+            .catch(error => console.error('ops! aconteceu algo:', error));
+        }
+
+        const audio = document.getElementById('audio-fundo');
+        const btnAudio = document.getElementById('btn-audio');
+        audio.volume = 0.3;
+
+        function iniciarSom() {
+            audio.play().then(() => {
+                document.removeEventListener('click', iniciarSom);
+            }).catch(e => {});
+        }
+        document.addEventListener('click', iniciarSom);
+
+        function toggleAudio() {
+            if (audio.paused) {
+                audio.play();
+                btnAudio.innerText = "♪ som: ligado";
+                btnAudio.style.opacity = "0.6";
+            } else {
+                audio.pause();
+                btnAudio.innerText = "♪ som: desligado";
+                btnAudio.style.opacity = "0.3";
+            }
+        }
+
+        function toggleLike(btn) {
+            if (btn.innerText === 'curtir') {
+                btn.innerText = 'curtido';
+                btn.classList.add('liked');
+            } else {
+                btn.innerText = 'curtir';
+                btn.classList.remove('liked');
+            }
+        }
+
+        window.onload = () => {
+            const tempo = calcularTempoPassado();
+            document.querySelectorAll('.time-ago').forEach(el => { el.innerText = tempo; });
+
+            carregarFoto(0);
+            setTimeout(() => {
+                document.getElementById('assinatura').style.opacity = '0.9';
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

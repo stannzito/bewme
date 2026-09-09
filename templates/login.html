@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            background-color: #fff2de; 
+            color: #1a1a1a; 
+            font-family: 'Times New Roman', Times, serif; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; 
+        }
+        .login-box { text-align: center; }
+        input[type="text"] { 
+            background: transparent; border: none; 
+            border-bottom: 1px solid #1a1a1a; color: #1a1a1a; 
+            font-family: inherit; font-size: 16px; font-style: italic; 
+            text-align: center; padding: 5px; outline: none; width: 250px;
+        }
+        button { 
+            display: block; margin: 20px auto 0; background: transparent; 
+            border: 1px solid #1a1a1a; color: #1a1a1a; padding: 6px 16px; 
+            font-family: inherit; cursor: pointer; font-size: 13px; 
+            text-transform: lowercase; transition: all 0.3s ease; 
+        }
+        button:hover { background: #1a1a1a; color: #fff2de; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <p style="font-style: italic; margin-bottom: 15px;">digite seu nome</p>
+        <form method="POST">
+            <input type="text" name="nome" autocomplete="off" required autofocus>
+            <button type="submit">entrar</button>
+        </form>
+    </div>
+</body>
+</html>
